@@ -10,9 +10,9 @@ import (
 	"github.com/AumSahayata/cdcgo/fastcdc"
 )
 
-// TestChunkReaderHashBasic ensures that ChunkReader produces correct chunks
+// TestChunkReader_HashBasic ensures that ChunkReader produces correct chunks
 // and computes SHA-256 hashes as expected.
-func TestChunkReaderHashBasic(t *testing.T) {
+func TestChunkReader_HashBasic(t *testing.T) {
 	// Test input
 	input := []byte("Hello, World! This is test data")
 	r := bytes.NewReader(input)
@@ -54,10 +54,10 @@ func TestChunkReaderHashBasic(t *testing.T) {
 	}
 }
 
-// TestChunkReaderNormal verifies that ChunkReader correctly reads a stream
+// TestChunkReader_Normal verifies that ChunkReader correctly reads a stream
 // of data using FastCDC chunking. It ensures that all data is chunked
 // and that each chunk size respects the MinSize/MaxSize constraints.
-func TestChunkReaderNormal(t *testing.T) {
+func TestChunkReader_Normal(t *testing.T) {
 	data := bytes.Repeat([]byte{0xAA}, 1024)
 	params := fastcdc.NewParams(50, 100, 200, nil)
 	chunker := fastcdc.NewChunker(params)
@@ -86,9 +86,9 @@ func TestChunkReaderNormal(t *testing.T) {
 	}
 }
 
-// TestChunkReaderLeftoverEOF verifies that leftover bytes in the buffer
+// TestChunkReader_LeftoverEOF verifies that leftover bytes in the buffer
 // are correctly returned as a final chunk when the reader reaches EOF.
-func TestChunkReaderLeftoverEOF(t *testing.T) {
+func TestChunkReader_LeftoverEOF(t *testing.T) {
 	data := bytes.Repeat([]byte{0xAB}, 150) // smaller than buffer
 	params := fastcdc.NewParams(50, 100, 200, nil)
 	chunker := fastcdc.NewChunker(params)
@@ -121,9 +121,9 @@ func (e *errorReader) Read(p []byte) (int, error) {
 	return 0, fmt.Errorf("simulated read error")
 }
 
-// TestChunkReaderReadError ensures that ChunkReader correctly propagates
+// TestChunkReader_ReadError ensures that ChunkReader correctly propagates
 // read errors when no bytes are read from the underlying reader.
-func TestChunkReaderReadError(t *testing.T) {
+func TestChunkReader_ReadError(t *testing.T) {
 
 	params := fastcdc.NewParams(50, 100, 200, nil)
 	chunker := fastcdc.NewChunker(params)
