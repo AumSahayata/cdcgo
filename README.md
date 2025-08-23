@@ -1,7 +1,9 @@
-# 📘 cdcgo – Content-Defined Chunking in Go (ALPHA)
+# 📘 cdcgo – Content-Defined Chunking in Go (Pre-Release)
 
-**cdcgo** is a Go library that implements [FastCDC](https://www.usenix.org/system/files/conference/atc16/atc16-paper-xia.pdf),  
+**cdcgo** is a Go library that implements [FastCDC](https://www.usenix.org/system/files/conference/atc16/atc16-paper-xia.pdf), 
 a high-performance **content-defined chunking (CDC)** algorithm for deduplication and data storage.
+
+[![Go Reference](https://pkg.go.dev/badge/github.com/AumSahayata/cdcgo.svg)](https://pkg.go.dev/github.com/AumSahayata/cdcgo)
 
 ---
 
@@ -34,3 +36,15 @@ Content-defined chunking (CDC) finds **natural data boundaries**, enabling effic
 ## 📦 Installation
 ```bash
 go get github.com/AumSahayata/cdcgo
+```
+
+## 📖 Documentation
+
+- [pkg.go.dev documentation](https://pkg.go.dev/github.com/AumSahayata/cdcgo)  
+- Examples available in the `examples/` folder (Soon!)
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License. See [LICENSE](https://github.com/AumSahayata/cdcgo/blob/main/LICENSE) for details.
