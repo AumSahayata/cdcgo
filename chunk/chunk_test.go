@@ -6,17 +6,20 @@ import (
 	"fmt"
 	"io"
 	"testing"
+
+	"github.com/AumSahayata/cdcgo/fastcdc"
 )
 
-// TestChunkReader_Basic ensures that ChunkReader produces correct chunks
-// and computes SHA-256 hashes as expected
-func TestChunkReader_Basic(t *testing.T) {
+// TestChunkReaderHashBasic ensures that ChunkReader produces correct chunks
+// and computes SHA-256 hashes as expected.
+func TestChunkReaderHashBasic(t *testing.T) {
 	// Test input
 	input := []byte("Hello, World! This is test data")
 	r := bytes.NewReader(input)
+	params := fastcdc.NewParams(10, 20, 50, nil)
 
 	// Create ChunkReader with chunk size = 8 bytes
-	cr := NewChunkReader(r, sha256.New(), 8)
+	cr := NewChunkReader(r, sha256.New(), 8, fastcdc.NewChunker(params))
 
 	// Read all chunks until EOF
 	var chunks []Chunk
@@ -51,19 +54,101 @@ func TestChunkReader_Basic(t *testing.T) {
 	}
 }
 
+// TestChunkReaderNormal verifies that ChunkReader correctly reads a stream
+// of data using FastCDC chunking. It ensures that all data is chunked
+// and that each chunk size respects the MinSize/MaxSize constraints.
+func TestChunkReaderNormal(t *testing.T) {
+	data := bytes.Repeat([]byte{0xAA}, 1024)
+	params := fastcdc.NewParams(50, 100, 200, nil)
+	chunker := fastcdc.NewChunker(params)
+	cr := NewChunkReader(bytes.NewReader(data), sha256.New(), 256, chunker)
+
+	offset := 0
+	for {
+		ch, err := cr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		// Last chunk may be smaller than MinSize
+		if offset+ch.Size < len(data) { // not the last chunk
+			if ch.Size < params.MinSize || ch.Size > params.MaxSize {
+				t.Errorf("chunk size out of bounds: %d", ch.Size)
+			}
+		}
+		offset += ch.Size
+	}
+
+	if offset != len(data) {
+		t.Errorf("total bytes read %d, expected %d", offset, len(data))
+	}
+}
+
+// TestChunkReaderLeftoverEOF verifies that leftover bytes in the buffer
+// are correctly returned as a final chunk when the reader reaches EOF.
+func TestChunkReaderLeftoverEOF(t *testing.T) {
+	data := bytes.Repeat([]byte{0xAB}, 150) // smaller than buffer
+	params := fastcdc.NewParams(50, 100, 200, nil)
+	chunker := fastcdc.NewChunker(params)
+
+	cr := NewChunkReader(bytes.NewReader(data), sha256.New(), 128, chunker)
+
+	totalRead := 0
+
+	for {
+		ch, err := cr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		totalRead += ch.Size
+	}
+
+	if totalRead != len(data) {
+		t.Errorf("leftover not processed correctly, got %d, want %d", totalRead, len(data))
+	}
+}
+
+// errorReader is a helper reader that always returns an error.
+type errorReader struct{}
+
+func (e *errorReader) Read(p []byte) (int, error) {
+	return 0, fmt.Errorf("simulated read error")
+}
+
+// TestChunkReaderReadError ensures that ChunkReader correctly propagates
+// read errors when no bytes are read from the underlying reader.
+func TestChunkReaderReadError(t *testing.T) {
+
+	params := fastcdc.NewParams(50, 100, 200, nil)
+	chunker := fastcdc.NewChunker(params)
+	cr := NewChunkReader(&errorReader{}, sha256.New(), 128, chunker)
+
+	_, err := cr.Next()
+	if err == nil || err.Error() != "simulated read error" {
+		t.Fatalf("expected read error, got %v", err)
+	}
+}
+
 func BenchmarkChunkReader(b *testing.B) {
 	// 16MB input
 	data := bytes.Repeat([]byte("abcdef1234567890"), 1<<19)
 	dataSize := int64(len(data))
 
 	sizes := []int{4 << 10, 64 << 10, 1 << 20} // 4KB, 64KB, 1MB
+	params := fastcdc.NewParams(4<<10, 8<<10, 16<<10, nil) // chunk sizes in bytes
 
 	for _, sz := range sizes {
 		b.Run(fmt.Sprintf("size=%d", sz), func(b *testing.B) {
 			b.SetBytes(dataSize) // tells Go the size of input per iteration
 			for b.Loop() {
 				// Important: create a new reader each iteration
-				cr := NewChunkReader(bytes.NewReader(data), sha256.New(), sz)
+				cr := NewChunkReader(bytes.NewReader(data), sha256.New(), sz, fastcdc.NewChunker(params))
 				// Consume all chunks
 				for {
 					_, err := cr.Next()
