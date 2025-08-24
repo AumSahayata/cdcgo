@@ -30,13 +30,13 @@ func (b *BaseStorage) chunkExists(hash string) (bool, error) {
 }
 
 // chunkGet fetches the metadata of a chunk from the index.
-func (b *BaseStorage) chunkGet(hash string) (types.Chunk, bool, error) {
-	// Check if the index implements PersistentIndex
-	if pi, ok := b.index.(PersistentIndex); ok {
-		return pi.GetWithErr(hash)
-	}
+// func (b *BaseStorage) chunkGet(hash string) (types.Chunk, bool, error) {
+// 	// Check if the index implements PersistentIndex
+// 	if pi, ok := b.index.(PersistentIndex); ok {
+// 		return pi.GetWithErr(hash)
+// 	}
 
-	// Fallback for normal Index
-	ch, ok := b.index.Get(hash)
-	return ch, ok, nil
-}
+// 	// Fallback for normal Index
+// 	ch, ok := b.index.Get(hash)
+// 	return ch, ok, nil
+// }
