@@ -157,7 +157,7 @@ func BenchmarkPersistentIndexJSON_Add(b *testing.B) {
 		b.Fatalf("failed to create index: %v", err)
 	}
 
-	chunkSize := 1024            // 1 KB
+	chunkSize := 1024
 	b.SetBytes(int64(chunkSize)) // set bytes for throughput reporting
 
 	for i := 0; b.Loop(); i++ {
