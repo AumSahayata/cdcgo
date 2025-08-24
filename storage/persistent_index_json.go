@@ -141,7 +141,9 @@ func (p *PersistentIndexJSON) ExistsWithErr(hash string) (bool, error) {
 	}
 
 	// Reload from JSON file
-	p.load()
+	if err := p.load(); err != nil {
+		return false, err
+	}
 
 	_, ok := p.store[hash]
 	return ok, nil
@@ -175,7 +177,9 @@ func (p *PersistentIndexJSON) GetWithErr(hash string) (types.Chunk, bool, error)
 	}
 
 	// Reload from JSON file
-	p.load()
+	if err := p.load(); err != nil {
+		return types.Chunk{}, false, err
+	}
 
 	ch, ok := p.store[hash]
 	if !ok {
