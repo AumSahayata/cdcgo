@@ -141,7 +141,13 @@ func (p *PersistentIndexJSON) ExistsWithErr(hash string) (bool, error) {
 	}
 
 	// Reload from JSON file
-	p.load()
+	if err := p.load(); err != nil {
+        if os.IsNotExist(err) {
+            // File does not exist → treat as empty store
+            return false, nil
+        }
+        return false, err // real I/O or parsing error
+    }
 
 	_, ok := p.store[hash]
 	return ok, nil
@@ -175,7 +181,13 @@ func (p *PersistentIndexJSON) GetWithErr(hash string) (types.Chunk, bool, error)
 	}
 
 	// Reload from JSON file
-	p.load()
+	if err := p.load(); err != nil {
+        if os.IsNotExist(err) {
+            // File does not exist → treat as empty store
+			return types.Chunk{}, false, nil
+        }
+        return types.Chunk{}, false, err // real I/O or parsing error
+    }
 
 	ch, ok := p.store[hash]
 	if !ok {
