@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/AumSahayata/cdcgo/fastcdc"
+	"github.com/AumSahayata/cdcgo/types"
 )
 
 // TestChunkReader_HashBasic ensures that ChunkReader produces correct chunks
@@ -22,7 +23,7 @@ func TestChunkReader_HashBasic(t *testing.T) {
 	cr := NewChunkReader(r, sha256.New(), 8, fastcdc.NewChunker(params))
 
 	// Read all chunks until EOF
-	var chunks []Chunk
+	var chunks []types.Chunk
 	for {
 		ch, err := cr.Next()
 		if err == io.EOF {
@@ -140,7 +141,7 @@ func BenchmarkChunkReader(b *testing.B) {
 	data := bytes.Repeat([]byte("abcdef1234567890"), 1<<19)
 	dataSize := int64(len(data))
 
-	sizes := []int{4 << 10, 64 << 10, 1 << 20} // 4KB, 64KB, 1MB
+	sizes := []int{4 << 10, 64 << 10, 1 << 20}             // 4KB, 64KB, 1MB
 	params := fastcdc.NewParams(4<<10, 8<<10, 16<<10, nil) // chunk sizes in bytes
 
 	for _, sz := range sizes {
