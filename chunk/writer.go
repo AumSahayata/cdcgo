@@ -1,40 +1,50 @@
 package chunk
 
 import (
+	"encoding/hex"
 	"io"
 	"sync"
+
+	"github.com/AumSahayata/cdcgo/storage"
+	"github.com/AumSahayata/cdcgo/types"
 )
 
-// ChunkWriter writes chunks to an underlying storage.
-// It optionally supports deduplication using an in-memory index.
+// ChunkWriter writes chunks to an underlying storage
+// and avoids duplicates using an Index.
 type ChunkWriter struct {
-	w io.Writer  // underlying storage
-	index map[string]int64 // optional dedupe: hash (hex or []byte) -> offset
-	offset int64 // write position
-	mu     sync.Mutex // protect concurrent writes (optional)
+	w      io.Writer     // underlying storage
+	index  storage.Index // dedupe index
+	offset int64         // write position
+	mu     sync.Mutex
 }
 
-// NewChunkWriter creates a new ChunkWriter for the given io.Writer.
-func NewChunkWriter(w io.Writer) *ChunkWriter {
+// NewChunkWriter creates a new ChunkWriter.
+// If no index is provided, a MemoryIndex will be used.
+func NewChunkWriter(w io.Writer, idx storage.Index) *ChunkWriter {
+	if idx == nil {
+		idx = storage.NewMemoryIndex()
+	}
+
 	return &ChunkWriter{
-		w: w,
-		index: make(map[string]int64),
+		w:     w,
+		index: idx,
 	}
 }
 
-// WriteChunk writes a chunk to the underlying writer.
-// If the chunk is already present in the index, it can skip writing.
+// WriteChunk writes a chunk’s data to the underlying writer if it is unique.
+// Duplicate chunks are skipped.
+//
 // Returns:
-//   - written: number of bytes written (0 if duplicate)
-//   - duplicate: true if chunk was skipped
-//   - err: any I/O error
-func (cw *ChunkWriter) WriteChunk(chunk Chunk, data []byte) (written int, duplicate bool, err error) {
+//   - n: number of bytes written
+//   - duplicate: true if the chunk was already written
+//   - err: any underlying write error
+func (cw *ChunkWriter) WriteChunk(chunk types.Chunk, data []byte) (written int, duplicate bool, err error) {
 	cw.mu.Lock()
 	defer cw.mu.Unlock()
 
-	hashkey := string(chunk.Hash)
+	hashkey := hex.EncodeToString(chunk.Hash)
 
-	if _, exists := cw.index[hashkey]; exists {
+	if cw.index.Exists(hashkey) {
 		// Chunk already written; skip writing
 		return 0, true, nil
 	}
@@ -46,15 +56,18 @@ func (cw *ChunkWriter) WriteChunk(chunk Chunk, data []byte) (written int, duplic
 	}
 
 	// Update index and offset
-	cw.index[hashkey] = cw.offset
+	err = cw.index.Add(chunk)
+	if err != nil {
+		return n, false, err
+	}
 	cw.offset += int64(n)
 
 	return n, false, nil
 }
 
-// Flush is optional for buffered writers
+// Flush flushes the underlying writer if supported.
 func (cw *ChunkWriter) Flush() error {
-	if f, ok := cw.w.(interface{ Flush() error}); ok {
+	if f, ok := cw.w.(interface{ Flush() error }); ok {
 		return f.Flush()
 	}
 

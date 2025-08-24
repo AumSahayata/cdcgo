@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/AumSahayata/cdcgo/fastcdc"
+	"github.com/AumSahayata/cdcgo/types"
 )
 
 // TestChunkWriter_Basic tests basic ChunkWriter functionality.
@@ -20,39 +21,39 @@ import (
 func TestChunkWriter_Basic(t *testing.T) {
 	// Prepare a buffer to act as underlying storage
 	buf := &bytes.Buffer{}
-	cw := NewChunkWriter(buf)
+	cw := NewChunkWriter(buf, nil)
 
 	data1 := []byte("Chunk1")
 	data2 := []byte("Chunk2")
 
 	hash1 := sha256.Sum256(data1)
-	ch1 := Chunk{Hash: hash1[:]}
+	ch1 := types.Chunk{Hash: hash1[:]}
 
 	hash2 := sha256.Sum256(data2)
-	ch2 := Chunk{Hash: hash2[:]}
+	ch2 := types.Chunk{Hash: hash2[:]}
 
 	// Write first chunk
 	n, dup, err := cw.WriteChunk(ch1, data1)
 	if err != nil {
-        t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("unexpected error: %v", err)
 	}
 	if dup {
-        t.Fatalf("first chunk should not be duplicate")
+		t.Fatalf("first chunk should not be duplicate")
 	}
 	if n != len(data1) {
-        t.Errorf("bytes written = %d, want %d", n, len(data1))
+		t.Errorf("bytes written = %d, want %d", n, len(data1))
 	}
 
-    // Write second chunk
-    n, dup, err = cw.WriteChunk(ch2, data2)
-    if dup || err != nil || n != len(data2) {
-        t.Errorf("writing second chunk failed")
-    }
+	// Write second chunk
+	n, dup, err = cw.WriteChunk(ch2, data2)
+	if dup || err != nil || n != len(data2) {
+		t.Errorf("writing second chunk failed")
+	}
 
 	// Write duplicate of first chunk
 	n, dup, _ = cw.WriteChunk(ch1, data1)
-	if !dup || n != 0{
-        t.Errorf("duplicate chunk was not skipped correctly")
+	if !dup || n != 0 {
+		t.Errorf("duplicate chunk was not skipped correctly")
 	}
 
 	// Verify buffer content
@@ -68,39 +69,39 @@ func TestChunkWriter_Basic(t *testing.T) {
 // using a sha256 hasher. Benchmarks are performed using io.Discard to
 // avoid actual I/O overhead and isolate processing performance.
 func BenchmarkChunkWriter(b *testing.B) {
-    // Prepare 16MB of test data
-    data := bytes.Repeat([]byte("abcdef1234567890"), 1<<19) // 16 MB
-    dataSize := int64(len(data))
+	// Prepare 16MB of test data
+	data := bytes.Repeat([]byte("abcdef1234567890"), 1<<19) // 16 MB
+	dataSize := int64(len(data))
 
-    // FastCDC parameters
-    params := fastcdc.NewParams(4<<10, 8<<10, 16<<10, nil) // min=4KB, avg=8KB, max=16KB
-    chunker := fastcdc.NewChunker(params)
-    hashFunc := sha256.New()
+	// FastCDC parameters
+	params := fastcdc.NewParams(4<<10, 8<<10, 16<<10, nil) // min=4KB, avg=8KB, max=16KB
+	chunker := fastcdc.NewChunker(params)
+	hashFunc := sha256.New()
 
-    // Test multiple buffer sizes for ChunkReader
-    bufferSizes := []int{4 << 10, 64 << 10, 1 << 20} // 4KB, 64KB, 1MB
+	// Test multiple buffer sizes for ChunkReader
+	bufferSizes := []int{4 << 10, 64 << 10, 1 << 20} // 4KB, 64KB, 1MB
 
-    for _, bufSize := range bufferSizes {
-        b.Run(fmt.Sprintf("bufSize=%d", bufSize), func(b *testing.B) {
-            b.SetBytes(dataSize) // allows Go to report MB/s
-            for b.Loop() {
-                reader := NewChunkReader(bytes.NewReader(data), hashFunc, bufSize, chunker)
-                writer := NewChunkWriter(io.Discard)
+	for _, bufSize := range bufferSizes {
+		b.Run(fmt.Sprintf("bufSize=%d", bufSize), func(b *testing.B) {
+			b.SetBytes(dataSize) // allows Go to report MB/s
+			for b.Loop() {
+				reader := NewChunkReader(bytes.NewReader(data), hashFunc, bufSize, chunker)
+				writer := NewChunkWriter(io.Discard, nil)
 
-                for {
-                    ch, err := reader.Next()
-                    if err == io.EOF {
-                        break
-                    }
-                    if err != nil {
-                        b.Fatalf("unexpected error: %v", err)
-                    }
+				for {
+					ch, err := reader.Next()
+					if err == io.EOF {
+						break
+					}
+					if err != nil {
+						b.Fatalf("unexpected error: %v", err)
+					}
 
-                    // Slice the chunk data correctly
-                    chunkData := data[ch.Offset : ch.Offset+int64(ch.Size)]
-                    _, _, _ = writer.WriteChunk(ch, chunkData)
-                }
-            }
-        })
-    }
+					// Slice the chunk data correctly
+					chunkData := data[ch.Offset : ch.Offset+int64(ch.Size)]
+					_, _, _ = writer.WriteChunk(ch, chunkData)
+				}
+			}
+		})
+	}
 }

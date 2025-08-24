@@ -1,4 +1,4 @@
-package chunk
+package types
 
 import (
 	"bytes"
@@ -6,7 +6,12 @@ import (
 	"fmt"
 )
 
-// Chunk
+// Chunk represents a contiguous piece of input data.
+//
+// Fields:
+//   - Offset: byte offset of the chunk within the original input
+//   - Size:   length of the chunk in bytes
+//   - Hash:   cryptographic hash (e.g., SHA-256) of the chunk’s data
 type Chunk struct {
 	Offset int64
 	Size   int
