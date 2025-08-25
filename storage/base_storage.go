@@ -4,12 +4,13 @@ import (
 	"sync"
 
 	"github.com/AumSahayata/cdcgo/chunk"
+	"github.com/AumSahayata/cdcgo/model"
 )
 
 // Storage defines the minimal behavior for a chunk storage backend.
 // Backends should guarantee deduplication and safe persistence.
 type Storage interface {
-	Save(chunk chunk.Chunk, data []byte) error
+	Save(chunk model.Chunk, data []byte) error
 	Load(hash string) ([]byte, error)
 	VerifyIntegrity() error
 }
@@ -43,9 +44,3 @@ func (b *BaseStorage) chunkExists(hash string) (bool, error) {
 // 	ch, ok := b.index.Get(hash)
 // 	return ch, ok, nil
 // }
-
-// VerifyIntegrity iterates over the index and checks that
-// each chunk exists and matches its hash.
-func (b *BaseStorage) verifyIntegrity() error {
-	// TODO
-}

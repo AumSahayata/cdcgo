@@ -5,7 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/AumSahayata/cdcgo/types"
+	"github.com/AumSahayata/cdcgo/chunk"
+	"github.com/AumSahayata/cdcgo/index"
+	"github.com/AumSahayata/cdcgo/model"
 )
 
 // FSStorage provides file-backed chunk storage combined with a Index.
@@ -20,7 +22,7 @@ type FSStorage struct {
 //   - Ensure root directory exists
 //   - Initialize FSStorage with given index (e.g., MemoryIndex)
 //   - If idx is nil, create a new MemoryIndex (In memory)
-func NewFSStorage(root string, idx Index) (*FSStorage, error) {
+func NewFSStorage(root string, idx chunk.Index) (*FSStorage, error) {
 	// Ensure root directory exists
 	if err := os.MkdirAll(root, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create root directory: %w", err)
@@ -28,7 +30,7 @@ func NewFSStorage(root string, idx Index) (*FSStorage, error) {
 
 	// If no index provided, create default in-memory index
 	if idx == nil {
-		idx = NewMemoryIndex()
+		idx = index.NewMemoryIndex()
 	}
 
 	return &FSStorage{
@@ -47,7 +49,7 @@ func NewFSStorage(root string, idx Index) (*FSStorage, error) {
 //   - data: the actual chunk bytes
 //
 // Returns an error if writing to disk fails.
-func (fs *FSStorage) Save(chunk types.Chunk, data []byte) error {
+func (fs *FSStorage) Save(chunk model.Chunk, data []byte) error {
 	// Lock for concurrent writes
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
@@ -75,7 +77,6 @@ func (fs *FSStorage) Save(chunk types.Chunk, data []byte) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
 
 	_, err = f.Write(data)
 	if err != nil {

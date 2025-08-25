@@ -14,7 +14,7 @@ import "github.com/AumSahayata/cdcgo/model"
 type Index interface {
 	Add(chunk model.Chunk) error         // record a new chunk
 	Exists(hash string) bool             // check if chunk exists
-	Get(hash string) (model.Chunk, bool) // retrieve chunk info if needed
+	Get(hash string) (model.Chunk, bool) // retrieve chunk info
 }
 
 // PersistentIndex extends Index to support backends where storage operations

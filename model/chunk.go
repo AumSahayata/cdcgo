@@ -33,3 +33,27 @@ func (c Chunk) Equal(other Chunk) bool {
 func (c Chunk) String() string {
 	return fmt.Sprintf("Chunk {offset=%d, size=%d, hash=%s}", c.Offset, c.Size, c.HexHash())
 }
+
+func (c *Chunk) VerifyChunk(data []byte, hashAlgo string) error {
+	h := Hasher{Name: hashAlgo}
+	hasher, err := h.New()
+	if err != nil {
+		return err
+	}
+
+	// Compute hash
+	hasher.Write(data)
+	newHash := hasher.Sum(nil)
+
+	// Compare hash
+	if !bytes.Equal(c.Hash, newHash) {
+		return fmt.Errorf("chunk hash mismatch: expected %x, got %x", c.Hash, newHash)
+	}
+
+	// Compare size
+	if c.Size != len(data) {
+		return fmt.Errorf("chunk size mismatch: expected %d, got %d", c.Size, len(data))
+	}
+
+	return nil
+}

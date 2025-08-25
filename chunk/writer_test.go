@@ -76,7 +76,6 @@ func BenchmarkChunkWriter(b *testing.B) {
 	// FastCDC parameters
 	params := fastcdc.NewParams(4<<10, 8<<10, 16<<10, nil) // min=4KB, avg=8KB, max=16KB
 	chunker := fastcdc.NewChunker(params)
-	hashFunc := sha256.New()
 
 	// Test multiple buffer sizes for ChunkReader
 	bufferSizes := []int{4 << 10, 64 << 10, 1 << 20} // 4KB, 64KB, 1MB
@@ -85,11 +84,14 @@ func BenchmarkChunkWriter(b *testing.B) {
 		b.Run(fmt.Sprintf("bufSize=%d", bufSize), func(b *testing.B) {
 			b.SetBytes(dataSize) // allows Go to report MB/s
 			for b.Loop() {
-				reader := NewChunkReader(bytes.NewReader(data), hashFunc, bufSize, chunker)
+				reader, err := NewChunkReader(bytes.NewReader(data), "", bufSize, chunker)
+				if err != nil {
+					b.Fatalf("failed to create chunk reader: %v", err)
+				}
 				writer := NewChunkWriter(io.Discard, nil)
 
 				for {
-					ch, err := reader.Next()
+					ch, _, err := reader.Next()
 					if err == io.EOF {
 						break
 					}

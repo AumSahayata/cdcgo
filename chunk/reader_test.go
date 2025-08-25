@@ -20,12 +20,14 @@ func TestChunkReader_HashBasic(t *testing.T) {
 	params := fastcdc.NewParams(10, 20, 50, nil)
 
 	// Create ChunkReader with chunk size = 8 bytes
-	cr := NewChunkReader(r, sha256.New(), 8, fastcdc.NewChunker(params))
-
+	cr, err := NewChunkReader(r, "", 8, fastcdc.NewChunker(params))
+	if err != nil {
+		t.Fatalf("failed to create chunk reader: %v", err)
+	}
 	// Read all chunks until EOF
 	var chunks []model.Chunk
 	for {
-		ch, err := cr.Next()
+		ch, _, err := cr.Next()
 		if err == io.EOF {
 			break
 		}
@@ -62,11 +64,14 @@ func TestChunkReader_Normal(t *testing.T) {
 	data := bytes.Repeat([]byte{0xAA}, 1024)
 	params := fastcdc.NewParams(50, 100, 200, nil)
 	chunker := fastcdc.NewChunker(params)
-	cr := NewChunkReader(bytes.NewReader(data), sha256.New(), 256, chunker)
+	cr, err := NewChunkReader(bytes.NewReader(data), "", 256, chunker)
+	if err != nil {
+		t.Fatalf("failed to create chunk reader: %v", err)
+	}
 
 	offset := 0
 	for {
-		ch, err := cr.Next()
+		ch, _, err := cr.Next()
 		if err == io.EOF {
 			break
 		}
@@ -94,12 +99,15 @@ func TestChunkReader_LeftoverEOF(t *testing.T) {
 	params := fastcdc.NewParams(50, 100, 200, nil)
 	chunker := fastcdc.NewChunker(params)
 
-	cr := NewChunkReader(bytes.NewReader(data), sha256.New(), 128, chunker)
+	cr, err := NewChunkReader(bytes.NewReader(data), "", 128, chunker)
+	if err != nil {
+		t.Fatalf("failed to create chunk reader: %v", err)
+	}
 
 	totalRead := 0
 
 	for {
-		ch, err := cr.Next()
+		ch, _, err := cr.Next()
 		if err == io.EOF {
 			break
 		}
@@ -128,9 +136,12 @@ func TestChunkReader_ReadError(t *testing.T) {
 
 	params := fastcdc.NewParams(50, 100, 200, nil)
 	chunker := fastcdc.NewChunker(params)
-	cr := NewChunkReader(&errorReader{}, sha256.New(), 128, chunker)
+	cr, err := NewChunkReader(&errorReader{}, "", 128, chunker)
+	if err != nil {
+		t.Fatalf("failed to create chunk reader: %v", err)
+	}
 
-	_, err := cr.Next()
+	_, _, err = cr.Next()
 	if err == nil || err.Error() != "simulated read error" {
 		t.Fatalf("expected read error, got %v", err)
 	}
@@ -149,10 +160,14 @@ func BenchmarkChunkReader(b *testing.B) {
 			b.SetBytes(dataSize) // tells Go the size of input per iteration
 			for b.Loop() {
 				// Important: create a new reader each iteration
-				cr := NewChunkReader(bytes.NewReader(data), sha256.New(), sz, fastcdc.NewChunker(params))
+				cr, err := NewChunkReader(bytes.NewReader(data), "", sz, fastcdc.NewChunker(params))
+				if err != nil {
+					b.Fatalf("failed to create chunk reader: %v", err)
+				}
+
 				// Consume all chunks
 				for {
-					_, err := cr.Next()
+					_, _, err := cr.Next()
 					if err == io.EOF {
 						break
 					}
