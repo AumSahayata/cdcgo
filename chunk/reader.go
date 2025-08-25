@@ -5,7 +5,6 @@ import (
 	"io"
 
 	"github.com/AumSahayata/cdcgo/fastcdc"
-	"github.com/AumSahayata/cdcgo/types"
 )
 
 // ChunkReader implements a streaming API for splitting data into chunks.
@@ -48,7 +47,7 @@ func NewChunkReader(r io.Reader, hasher hash.Hash, bufSize int, chunker *fastcdc
 // Each call to Next advances the internal offset. The returned
 // Chunk is safe to use after the call; the underlying buffer may
 // be reused for subsequent chunks.
-func (cr *ChunkReader) Next() (types.Chunk, error) {
+func (cr *ChunkReader) Next() (Chunk, error) {
 	off := cr.offset
 
 	// Fill buffer if there's space
@@ -67,7 +66,7 @@ func (cr *ChunkReader) Next() (types.Chunk, error) {
 		cr.leftover = 0
 		cr.offset += int64(cut)
 
-		return types.Chunk{
+		return Chunk{
 			Offset: off,
 			Size:   cut,
 			Hash:   hash,
@@ -76,13 +75,13 @@ func (cr *ChunkReader) Next() (types.Chunk, error) {
 
 	// If no data read and other error, propagate
 	if total == 0 && err != nil {
-		return types.Chunk{}, err
+		return Chunk{}, err
 	}
 
 	// propagate other errors
 	if n == 0 && err != nil {
 		// no data read, other errors
-		return types.Chunk{}, err
+		return Chunk{}, err
 	}
 
 	// Determine chunk boundary
@@ -99,7 +98,7 @@ func (cr *ChunkReader) Next() (types.Chunk, error) {
 	cr.leftover = total - cut
 	cr.offset += int64(cut)
 
-	return types.Chunk{
+	return Chunk{
 		Offset: off,
 		Size:   cut,
 		Hash:   hash,

@@ -6,6 +6,8 @@ import (
 	"os"
 	"sync/atomic"
 	"testing"
+
+	"github.com/AumSahayata/cdcgo/internal/testutil"
 )
 
 // TestFSStorage_SaveAndLoad verifies that saved data can be retrieved correctly.
@@ -16,7 +18,7 @@ func TestFSStorage_SaveAndLoad(t *testing.T) {
 		t.Fatalf("failed to create FSStorage: %v", err)
 	}
 	data := []byte("test-data")
-	ch := helperChunk(data, 9)
+	ch := testutil.TestChunk(data, 9)
 
 	if err := fs.Save(ch, data); err != nil {
 		t.Fatalf("failed to save chunk: %v", err)
@@ -57,7 +59,7 @@ func TestFSStorage_SaveDuplicate(t *testing.T) {
 	}
 
 	data := []byte("duplicate-test")
-	ch := helperChunk(data, len(data))
+	ch := testutil.TestChunk(data, len(data))
 
 	// Save chunk first time
 	if err := fs.Save(ch, data); err != nil {
@@ -103,7 +105,7 @@ func BenchmarkFSStorage_Save(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; b.Loop(); i++ {
 		data[0] = byte(i) // ensure unique hash each iteration
-		ch := helperChunk(data, chunkSize)
+		ch := testutil.TestChunk(data, chunkSize)
 		_ = fs.Save(ch, data)
 	}
 }
@@ -120,7 +122,7 @@ func BenchmarkFSStorage_Load(b *testing.B) {
 	chunkSize := 1024
 	data := make([]byte, chunkSize)
 	b.SetBytes(int64(chunkSize))
-	ch := helperChunk(data, chunkSize)
+	ch := testutil.TestChunk(data, chunkSize)
 	_ = fs.Save(ch, data)
 
 	b.ResetTimer()
@@ -148,7 +150,7 @@ func BenchmarkFSStorage_Parallel(b *testing.B) {
 			i := atomic.AddUint64(&counter, 1)
 			data := make([]byte, chunkSize)
 			data[0] = byte(i)
-			ch := helperChunk(data, chunkSize)
+			ch := testutil.TestChunk(data, chunkSize)
 			_ = fs.Save(ch, data)
 			_, _ = fs.Load(ch.HexHash())
 		}

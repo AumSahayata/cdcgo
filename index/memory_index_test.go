@@ -1,27 +1,16 @@
-package storage
+package index
 
 import (
-	"crypto/sha256"
 	"sync/atomic"
 	"testing"
 
-	"github.com/AumSahayata/cdcgo/types"
+	"github.com/AumSahayata/cdcgo/internal/testutil"
 )
-
-// helperChunk creates a test chunk with given data.
-func helperChunk(data []byte, size int) types.Chunk {
-	hash := sha256.Sum256(data)
-	return types.Chunk{
-		Offset: 0,
-		Size:   size,
-		Hash:   hash[:],
-	}
-}
 
 // TestMemoryIndex_AddAndExists verifies that a chunk can be added
 // and later found using Exists().
 func TestMemoryIndex_AddAndExists(t *testing.T) {
-	ch := helperChunk([]byte("test-data"), 9)
+	ch := testutil.TestChunk([]byte("test-data"), 9)
 
 	mi := NewMemoryIndex()
 
@@ -38,7 +27,7 @@ func TestMemoryIndex_AddAndExists(t *testing.T) {
 
 // TestMemoryIndex_Get verifies retrieval of a chunk by its hash.
 func TestMemoryIndex_Get(t *testing.T) {
-	ch := helperChunk([]byte("chunks"), 6)
+	ch := testutil.TestChunk([]byte("chunks"), 6)
 
 	mi := NewMemoryIndex()
 	if err := mi.Add(ch); err != nil {
@@ -73,7 +62,7 @@ func TestMemoryIndex_NonExistent(t *testing.T) {
 // is safe for concurrent use.
 func TestMemoryIndex_Concurrent(t *testing.T) {
 	mi := NewMemoryIndex()
-	ch := helperChunk([]byte("concurrent"), 10)
+	ch := testutil.TestChunk([]byte("concurrent"), 10)
 
 	done := make(chan bool)
 
@@ -108,7 +97,7 @@ func BenchmarkMemoryIndex_Add(b *testing.B) {
 		// prepare unique data per iteration
 		data := make([]byte, chunkSize)
 		data[0] = byte(i) // ensure different hash each loop
-		ch := helperChunk(data, chunkSize)
+		ch := testutil.TestChunk(data, chunkSize)
 
 		_ = idx.Add(ch)
 	}
@@ -120,7 +109,7 @@ func BenchmarkMemoryIndex_Exists(b *testing.B) {
 	chunkSize := 1024
 	b.SetBytes(int64(chunkSize))
 
-	ch := helperChunk([]byte("zoro"), chunkSize)
+	ch := testutil.TestChunk([]byte("zoro"), chunkSize)
 	_ = idx.Add(ch)
 
 	b.ResetTimer()
@@ -140,7 +129,7 @@ func BenchmarkMemoryIndex_AddAndExists(b *testing.B) {
 		data := make([]byte, chunkSize)
 		data[0] = byte(i) // ensure different hash each loop
 
-		ch := helperChunk(data, chunkSize)
+		ch := testutil.TestChunk(data, chunkSize)
 		_ = idx.Add(ch)
 		_ = idx.Exists(ch.HexHash())
 	}
@@ -159,7 +148,7 @@ func BenchmarkMemoryIndex_Parallel(b *testing.B) {
 			i := atomic.AddUint64(&counter, 1)
 			data := make([]byte, chunkSize)
 			data[0] = byte(i)
-			ch := helperChunk(data, chunkSize)
+			ch := testutil.TestChunk(data, chunkSize)
 			_ = idx.Add(ch)
 			_ = idx.Exists(ch.HexHash())
 		}

@@ -1,4 +1,4 @@
-package storage
+package index
 
 import (
 	"encoding/hex"
@@ -7,7 +7,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/AumSahayata/cdcgo/types"
+	"github.com/AumSahayata/cdcgo/chunk"
 )
 
 // PersistentIndexJSON is a JSON-backed implementation of PersistentIndex.
@@ -25,7 +25,7 @@ import (
 //   - For high scale, prefer BoltDB/SQLite implementations.
 type PersistentIndexJSON struct {
 	path  string                 // file path on disk
-	store map[string]types.Chunk // in-memory representation
+	store map[string]chunk.Chunk // in-memory representation
 	mu    sync.RWMutex           // concurrency control
 }
 
@@ -43,7 +43,7 @@ type PersistentIndexJSON struct {
 func NewPersistentIndexJSON(path string) (*PersistentIndexJSON, error) {
 	idx := &PersistentIndexJSON{
 		path:  path,
-		store: make(map[string]types.Chunk),
+		store: make(map[string]chunk.Chunk),
 	}
 
 	// Check if the file exists
@@ -69,11 +69,11 @@ func NewPersistentIndexJSON(path string) (*PersistentIndexJSON, error) {
 //
 // If the chunk already exists, it is silently ignored.
 // Errors during disk flush are returned.
-func (p *PersistentIndexJSON) Add(ch types.Chunk) error {
+func (p *PersistentIndexJSON) Add(ch chunk.Chunk) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	newStore := make(map[string]types.Chunk)
+	newStore := make(map[string]chunk.Chunk)
 	maps.Copy(newStore, p.store)
 	newStore[hex.EncodeToString(ch.Hash)] = ch
 
@@ -159,7 +159,7 @@ func (p *PersistentIndexJSON) ExistsWithErr(hash string) (bool, error) {
 //   - chunk
 //   - true if found
 //   - false if not found
-func (p *PersistentIndexJSON) Get(hash string) (types.Chunk, bool) {
+func (p *PersistentIndexJSON) Get(hash string) (chunk.Chunk, bool) {
 	ch, ok, _ := p.GetWithErr(hash)
 	return ch, ok
 }
@@ -171,7 +171,7 @@ func (p *PersistentIndexJSON) Get(hash string) (types.Chunk, bool) {
 //   - chunk
 //   - boolean
 //   - error
-func (p *PersistentIndexJSON) GetWithErr(hash string) (types.Chunk, bool, error) {
+func (p *PersistentIndexJSON) GetWithErr(hash string) (chunk.Chunk, bool, error) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
@@ -184,14 +184,14 @@ func (p *PersistentIndexJSON) GetWithErr(hash string) (types.Chunk, bool, error)
 	if err := p.load(); err != nil {
 		if os.IsNotExist(err) {
 			// File does not exist → treat as empty store
-			return types.Chunk{}, false, nil
+			return chunk.Chunk{}, false, nil
 		}
-		return types.Chunk{}, false, err
+		return chunk.Chunk{}, false, err
 	}
 
 	ch, ok := p.store[hash]
 	if !ok {
-		return types.Chunk{}, false, nil
+		return chunk.Chunk{}, false, nil
 	}
 
 	return ch, true, nil
@@ -206,7 +206,7 @@ func (p *PersistentIndexJSON) load() error {
 		return err
 	}
 
-	tmp := make(map[string]types.Chunk)
+	tmp := make(map[string]chunk.Chunk)
 	if err := json.Unmarshal(data, &tmp); err != nil {
 		return err
 	}

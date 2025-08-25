@@ -3,25 +3,28 @@ package storage
 import (
 	"sync"
 
-	"github.com/AumSahayata/cdcgo/types"
+	"github.com/AumSahayata/cdcgo/chunk"
 )
 
-// Storage interface defines backend behavior.
+// Storage defines the minimal behavior for a chunk storage backend.
+// Backends should guarantee deduplication and safe persistence.
 type Storage interface {
-	Save(chunk types.Chunk, data []byte) error
+	Save(chunk chunk.Chunk, data []byte) error
 	Load(hash string) ([]byte, error)
+	VerifyIntegrity() error
 }
 
-// BaseStorage provides shared logic for all storage backends.
+// BaseStorage provides shared helpers for storage backends.
+// It embeds an Index for deduplication and a mutex for safe access.
 type BaseStorage struct {
-	index Index
+	index chunk.Index
 	mu    sync.Mutex
 }
 
 // chunkExists checks if a chunk exists in the index.
 func (b *BaseStorage) chunkExists(hash string) (bool, error) {
 	// If the index implements PersistentIndex, use ExistsWithErr
-	if pi, ok := b.index.(PersistentIndex); ok {
+	if pi, ok := b.index.(chunk.PersistentIndex); ok {
 		return pi.ExistsWithErr(hash)
 	}
 
@@ -40,3 +43,9 @@ func (b *BaseStorage) chunkExists(hash string) (bool, error) {
 // 	ch, ok := b.index.Get(hash)
 // 	return ch, ok, nil
 // }
+
+// VerifyIntegrity iterates over the index and checks that
+// each chunk exists and matches its hash.
+func (b *BaseStorage) verifyIntegrity() error {
+	// TODO
+}

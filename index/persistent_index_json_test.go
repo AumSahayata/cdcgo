@@ -1,9 +1,11 @@
-package storage
+package index
 
 import (
 	"os"
 	"sync/atomic"
 	"testing"
+
+	"github.com/AumSahayata/cdcgo/internal/testutil"
 )
 
 // TestPersistentIndexJSON_AddAndExists verifies chunks can be added
@@ -19,7 +21,7 @@ func TestPersistentIndexJSON_AddAndExists(t *testing.T) {
 	}
 
 	// Add a chunk
-	ch := helperChunk([]byte("jayson"), 6)
+	ch := testutil.TestChunk([]byte("jayson"), 6)
 	if err := idx.Add(ch); err != nil {
 		t.Fatalf("failed to add: %v", err)
 	}
@@ -51,7 +53,7 @@ func TestPersistentIndexJSON_Get(t *testing.T) {
 		t.Fatalf("failed to create index: %v", err)
 	}
 
-	ch := helperChunk([]byte("chunks"), 6)
+	ch := testutil.TestChunk([]byte("chunks"), 6)
 	if err := idx.Add(ch); err != nil {
 		t.Fatalf("unexpected error adding chunk: %v", err)
 	}
@@ -104,7 +106,7 @@ func TestPersistentIndexJSON_Concurrent(t *testing.T) {
 		t.Fatalf("failed to create index: %v", err)
 	}
 
-	ch := helperChunk([]byte("jayson"), 6)
+	ch := testutil.TestChunk([]byte("jayson"), 6)
 	done := make(chan bool)
 
 	// Writer goroutine
@@ -163,7 +165,7 @@ func BenchmarkPersistentIndexJSON_Add(b *testing.B) {
 	for i := 0; b.Loop(); i++ {
 		data := make([]byte, chunkSize)
 		data[0] = byte(i) // ensure different hash each iteration
-		ch := helperChunk(data, chunkSize)
+		ch := testutil.TestChunk(data, chunkSize)
 		_ = idx.Add(ch)
 	}
 }
@@ -179,7 +181,7 @@ func BenchmarkPersistentIndexJSON_Exists(b *testing.B) {
 	chunkSize := 1024
 	b.SetBytes(int64(chunkSize))
 
-	ch := helperChunk([]byte("zoro"), chunkSize)
+	ch := testutil.TestChunk([]byte("zoro"), chunkSize)
 	_ = idx.Add(ch)
 
 	b.ResetTimer()
@@ -202,7 +204,7 @@ func BenchmarkPersistentIndexJSON_AddAndExists(b *testing.B) {
 	for i := 0; b.Loop(); i++ {
 		data := make([]byte, chunkSize)
 		data[0] = byte(i)
-		ch := helperChunk(data, chunkSize)
+		ch := testutil.TestChunk(data, chunkSize)
 		_ = idx.Add(ch)
 		_ = idx.Exists(ch.HexHash())
 	}
@@ -225,7 +227,7 @@ func BenchmarkPersistentIndexJSON_Parallel(b *testing.B) {
 			i := atomic.AddUint64(&counter, 1)
 			data := make([]byte, chunkSize)
 			data[0] = byte(i)
-			ch := helperChunk(data, chunkSize)
+			ch := testutil.TestChunk(data, chunkSize)
 			_ = idx.Add(ch)
 			_ = idx.Exists(ch.HexHash())
 		}
