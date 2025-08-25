@@ -4,6 +4,9 @@ import (
 	"encoding/hex"
 	"io"
 	"sync"
+
+	"github.com/AumSahayata/cdcgo/index"
+	"github.com/AumSahayata/cdcgo/model"
 )
 
 // ChunkWriter writes chunks to an underlying storage
@@ -16,7 +19,12 @@ type ChunkWriter struct {
 }
 
 // NewChunkWriter creates a new ChunkWriter.
+// If no index is provided, a MemoryIndex will be used.
 func NewChunkWriter(w io.Writer, idx Index) *ChunkWriter {
+	if idx == nil {
+		idx = index.NewMemoryIndex()
+	}
+
 	return &ChunkWriter{
 		w:     w,
 		index: idx,
@@ -30,7 +38,7 @@ func NewChunkWriter(w io.Writer, idx Index) *ChunkWriter {
 //   - n: number of bytes written
 //   - duplicate: true if the chunk was already written
 //   - err: any underlying write error
-func (cw *ChunkWriter) WriteChunk(chunk Chunk, data []byte) (written int, duplicate bool, err error) {
+func (cw *ChunkWriter) WriteChunk(chunk model.Chunk, data []byte) (written int, duplicate bool, err error) {
 	cw.mu.Lock()
 	defer cw.mu.Unlock()
 

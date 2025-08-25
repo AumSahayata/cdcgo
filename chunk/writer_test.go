@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/AumSahayata/cdcgo/fastcdc"
+	"github.com/AumSahayata/cdcgo/model"
 )
 
 // TestChunkWriter_Basic tests basic ChunkWriter functionality.
@@ -26,10 +27,10 @@ func TestChunkWriter_Basic(t *testing.T) {
 	data2 := []byte("Chunk2")
 
 	hash1 := sha256.Sum256(data1)
-	ch1 := Chunk{Hash: hash1[:]}
+	ch1 := model.Chunk{Hash: hash1[:]}
 
 	hash2 := sha256.Sum256(data2)
-	ch2 := Chunk{Hash: hash2[:]}
+	ch2 := model.Chunk{Hash: hash2[:]}
 
 	// Write first chunk
 	n, dup, err := cw.WriteChunk(ch1, data1)

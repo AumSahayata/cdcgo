@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"sync"
 
-	"github.com/AumSahayata/cdcgo/chunk"
+	"github.com/AumSahayata/cdcgo/model"
 )
 
 // MemoryIndex is a simple in-memory implementation of Index.
@@ -14,20 +14,20 @@ import (
 // It should not be used in large-scale production environments
 // where durability or distributed access is required.
 type MemoryIndex struct {
-	store map[string]chunk.Chunk
+	store map[string]model.Chunk
 	mu    sync.RWMutex
 }
 
 // NewMemoryIndex creates an empty MemoryIndex.
 func NewMemoryIndex() *MemoryIndex {
 	return &MemoryIndex{
-		store: make(map[string]chunk.Chunk),
+		store: make(map[string]model.Chunk),
 	}
 }
 
 // Add inserts a chunk into the index.
 // The hash is used as the key, encoded in hex.
-func (m *MemoryIndex) Add(ch chunk.Chunk) error {
+func (m *MemoryIndex) Add(ch model.Chunk) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -46,7 +46,7 @@ func (m *MemoryIndex) Exists(hash string) bool {
 
 // Get retrieves a chunk by its hash.
 // Returns (chunk, true) if found, otherwise (zero, false).
-func (m *MemoryIndex) Get(hash string) (chunk.Chunk, bool) {
+func (m *MemoryIndex) Get(hash string) (model.Chunk, bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/AumSahayata/cdcgo/fastcdc"
+	"github.com/AumSahayata/cdcgo/model"
 )
 
 // TestChunkReader_HashBasic ensures that ChunkReader produces correct chunks
@@ -22,7 +23,7 @@ func TestChunkReader_HashBasic(t *testing.T) {
 	cr := NewChunkReader(r, sha256.New(), 8, fastcdc.NewChunker(params))
 
 	// Read all chunks until EOF
-	var chunks []Chunk
+	var chunks []model.Chunk
 	for {
 		ch, err := cr.Next()
 		if err == io.EOF {

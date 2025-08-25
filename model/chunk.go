@@ -1,4 +1,4 @@
-package chunk
+package model
 
 import (
 	"bytes"
