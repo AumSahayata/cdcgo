@@ -34,6 +34,15 @@ func (c Chunk) String() string {
 	return fmt.Sprintf("Chunk {offset=%d, size=%d, hash=%s}", c.Offset, c.Size, c.HexHash())
 }
 
+// VerifyChunk checks that the provided data matches the chunk's metadata.
+//
+// Parameters:
+//   - data: the byte slice representing the chunk's contents.
+//   - hashAlgo: the hash algorithm used (e.g., "sha256").
+//
+// Returns an error if:
+//   - The computed hash of the data does not match the stored Hash.
+//   - The length of data does not match the stored Size.
 func (c *Chunk) VerifyChunk(data []byte, hashAlgo string) error {
 	h := Hasher{Name: hashAlgo}
 	hasher, err := h.New()

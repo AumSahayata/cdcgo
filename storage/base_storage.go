@@ -22,8 +22,8 @@ type BaseStorage struct {
 	mu    sync.Mutex
 }
 
-// chunkExists checks if a chunk exists in the index.
-func (b *BaseStorage) chunkExists(hash string) (bool, error) {
+// ChunkExists checks if a chunk exists in the index.
+func (b *BaseStorage) ChunkExists(hash string) (bool, error) {
 	// If the index implements PersistentIndex, use ExistsWithErr
 	if pi, ok := b.index.(chunk.PersistentIndex); ok {
 		return pi.ExistsWithErr(hash)
@@ -33,8 +33,8 @@ func (b *BaseStorage) chunkExists(hash string) (bool, error) {
 	return b.index.Exists(hash), nil
 }
 
-// chunkGet fetches the metadata of a chunk from the index.
-// func (b *BaseStorage) chunkGet(hash string) (types.Chunk, bool, error) {
+// ChunkGet fetches the metadata of a chunk from the index.
+// func (b *BaseStorage) ChunkGet(hash string) (types.Chunk, bool, error) {
 // 	// Check if the index implements PersistentIndex
 // 	if pi, ok := b.index.(PersistentIndex); ok {
 // 		return pi.GetWithErr(hash)

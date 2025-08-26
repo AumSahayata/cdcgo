@@ -58,7 +58,7 @@ func (fs *FSStorage) Save(chunk model.Chunk, data []byte) error {
 	key := chunk.HexHash()
 
 	// Check if chunk exists in the index
-	exists, err := fs.chunkExists(key)
+	exists, err := fs.ChunkExists(key)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (fs *FSStorage) Save(chunk model.Chunk, data []byte) error {
 //   - error if the chunk does not exist or cannot be read
 func (fs *FSStorage) Load(hash string) ([]byte, error) {
 	// Check the index for existence
-	exists, err := fs.chunkExists(hash)
+	exists, err := fs.ChunkExists(hash)
 	if err != nil {
 		return nil, err
 	}

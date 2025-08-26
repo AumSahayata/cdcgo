@@ -67,6 +67,12 @@ func (m *Manifest) Flush(path string) error {
 // ChunkLoader defines a function that, given a chunk hash, returns the chunk's data.
 type ChunkLoader func(hash string) ([]byte, error)
 
+// VerifyFile validates all chunks listed in the manifest against their actual data.
+//
+// Parameters:
+//   - loader: a function that takes a chunk hash string and returns the chunk data ([]byte) and any error.
+//
+// Returns an error if any chunk fails verification (hash or size mismatch).
 func (m *Manifest) VerifyFile(load ChunkLoader) error {
 	for _, ch := range m.Chunks {
 		data, err := load(ch.HexHash())
