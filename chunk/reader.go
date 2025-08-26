@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/AumSahayata/cdcgo"
 	"github.com/AumSahayata/cdcgo/fastcdc"
-	"github.com/AumSahayata/cdcgo/model"
 )
 
 // ChunkReader implements a streaming API for splitting data into chunks.
@@ -70,7 +70,7 @@ func NewChunkReader(r io.Reader, hashAlgo string, bufSize int, chunker *fastcdc.
 
 // Next reads the next chunk from the underlying stream.
 //
-// It returns:
+// Returns:
 //   - A Chunk containing the offset, size, and hash of the data.
 //   - io.EOF when no more data is available.
 //   - Any other error encountered during reading.
@@ -78,7 +78,7 @@ func NewChunkReader(r io.Reader, hashAlgo string, bufSize int, chunker *fastcdc.
 // Each call to Next advances the internal offset. The returned
 // Chunk is safe to use after the call; the underlying buffer may
 // be reused for subsequent chunks.
-func (cr *ChunkReader) Next() (model.Chunk, []byte, error) {
+func (cr *ChunkReader) Next() (cdcgo.Chunk, []byte, error) {
 	off := cr.offset
 
 	// Fill buffer if there's space
@@ -91,10 +91,10 @@ func (cr *ChunkReader) Next() (model.Chunk, []byte, error) {
 		chunkData := cr.buf[:cut]
 
 		// Setup hasher
-		h := model.Hasher{Name: cr.hashAlgo}
+		h := cdcgo.Hasher{Name: cr.hashAlgo}
 		hasher, err := h.New()
 		if err != nil {
-			return model.Chunk{}, nil, err
+			return cdcgo.Chunk{}, nil, err
 		}
 
 		// Compute hash
@@ -105,22 +105,22 @@ func (cr *ChunkReader) Next() (model.Chunk, []byte, error) {
 		cr.leftover = 0
 		cr.offset += int64(cut)
 
-		return model.Chunk{
+		return cdcgo.Chunk{
 			Offset: off,
 			Size:   cut,
-			Hash:   hash,
+			Hash:   hash[:],
 		}, chunkData, nil
 	}
 
 	// If no data read and other error, propagate
 	if total == 0 && err != nil {
-		return model.Chunk{}, []byte{}, err
+		return cdcgo.Chunk{}, []byte{}, err
 	}
 
 	// propagate other errors
 	if n == 0 && err != nil {
 		// no data read, other errors
-		return model.Chunk{}, []byte{}, err
+		return cdcgo.Chunk{}, []byte{}, err
 	}
 
 	// Determine chunk boundary
@@ -128,10 +128,10 @@ func (cr *ChunkReader) Next() (model.Chunk, []byte, error) {
 	chunkData := cr.buf[:cut]
 
 	// Setup hasher
-	h := model.Hasher{Name: cr.hashAlgo}
+	h := cdcgo.Hasher{Name: cr.hashAlgo}
 	hasher, err := h.New()
 	if err != nil {
-		return model.Chunk{}, nil, err
+		return cdcgo.Chunk{}, nil, err
 	}
 
 	// Compute hash
@@ -144,9 +144,9 @@ func (cr *ChunkReader) Next() (model.Chunk, []byte, error) {
 	cr.leftover = total - cut
 	cr.offset += int64(cut)
 
-	return model.Chunk{
+	return cdcgo.Chunk{
 		Offset: off,
 		Size:   cut,
-		Hash:   hash,
+		Hash:   hash[:],
 	}, chunkData, nil
 }

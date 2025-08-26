@@ -21,7 +21,7 @@ import (
 	"github.com/AumSahayata/cdcgo/chunk"
 	"github.com/AumSahayata/cdcgo/fastcdc"
 	"github.com/AumSahayata/cdcgo/index"
-	"github.com/AumSahayata/cdcgo/model"
+	"github.com/AumSahayata/cdcgo/manifest"
 	"github.com/AumSahayata/cdcgo/storage"
 )
 
@@ -31,7 +31,7 @@ func TestPipeline_Full(t *testing.T) {
 	r := bytes.NewReader(data)
 
 	p := fastcdc.NewParams(5, 10, 20, nil)
-	chunker := fastcdc.NewChunker(p)
+	chunker := fastcdc.NewChunker(&p)
 
 	hashAlgo := "sha256"
 	cr, err := chunk.NewChunkReader(r, hashAlgo, 16, chunker)
@@ -44,7 +44,7 @@ func TestPipeline_Full(t *testing.T) {
 		t.Fatalf("failed to create file storage: %v", err)
 	}
 
-	m := model.NewManifest("example.txt", int64(len(data)), hashAlgo)
+	m := manifest.NewManifest("example.txt", int64(len(data)), hashAlgo)
 
 	for {
 		ch, d, err := cr.Next()
@@ -62,7 +62,7 @@ func TestPipeline_Full(t *testing.T) {
 		m.Chunks = append(m.Chunks, ch)
 	}
 
-	if err := m.VerifyFile(fs.Load); err != nil {
+	if err := m.VerifyFile(fs); err != nil {
 		t.Fatalf("manifest verification failed: %v", err)
 	}
 }
@@ -91,7 +91,7 @@ func BenchmarkPipeline_SaveChunks(b *testing.B) {
 			}
 
 			p := fastcdc.NewParams(32*1024, 128*1024, 512*1024, nil)
-			chunker := fastcdc.NewChunker(p)
+			chunker := fastcdc.NewChunker(&p)
 
 			fs, err := storage.NewFSStorage(root, index.NewMemoryIndex())
 			if err != nil {

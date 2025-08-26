@@ -1,4 +1,4 @@
-package model
+package cdcgo
 
 import (
 	"bytes"
@@ -52,7 +52,7 @@ func (c *Chunk) VerifyChunk(data []byte, hashAlgo string) error {
 
 	// Compute hash
 	hasher.Write(data)
-	newHash := hasher.Sum(nil)
+	newHash := hasher.Sum(nil)[:]
 
 	// Compare hash
 	if !bytes.Equal(c.Hash, newHash) {

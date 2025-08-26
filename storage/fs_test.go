@@ -1,4 +1,4 @@
-package storage
+package storage_test
 
 import (
 	"bytes"
@@ -8,12 +8,13 @@ import (
 	"testing"
 
 	"github.com/AumSahayata/cdcgo/internal/testutil"
+	"github.com/AumSahayata/cdcgo/storage"
 )
 
 // TestFSStorage_SaveAndLoad verifies that saved data can be retrieved correctly.
 func TestFSStorage_SaveAndLoad(t *testing.T) {
 	tmpDir := t.TempDir()
-	fs, err := NewFSStorage(tmpDir, nil)
+	fs, err := storage.NewFSStorage(tmpDir, nil)
 	if err != nil {
 		t.Fatalf("failed to create FSStorage: %v", err)
 	}
@@ -37,7 +38,7 @@ func TestFSStorage_SaveAndLoad(t *testing.T) {
 // TestFSStorage_LoadNonExistent ensures FSStorage handles missing chunks gracefully.
 func TestFSStorage_LoadNonExistent(t *testing.T) {
 	tmpDir := t.TempDir()
-	fs, err := NewFSStorage(tmpDir, nil)
+	fs, err := storage.NewFSStorage(tmpDir, nil)
 	if err != nil {
 		t.Fatalf("failed to create FSStorage: %v", err)
 	}
@@ -53,7 +54,7 @@ func TestFSStorage_LoadNonExistent(t *testing.T) {
 // does not create duplicate files and the index prevents redundant writes.
 func TestFSStorage_SaveDuplicate(t *testing.T) {
 	tmpDir := t.TempDir()
-	fs, err := NewFSStorage(tmpDir, nil)
+	fs, err := storage.NewFSStorage(tmpDir, nil)
 	if err != nil {
 		t.Fatalf("failed to create FSStorage: %v", err)
 	}
@@ -93,7 +94,7 @@ func TestFSStorage_SaveDuplicate(t *testing.T) {
 // This benchmark simulates sequential writes.
 func BenchmarkFSStorage_Save(b *testing.B) {
 	tmpDir := b.TempDir()
-	fs, err := NewFSStorage(tmpDir, nil)
+	fs, err := storage.NewFSStorage(tmpDir, nil)
 	if err != nil {
 		b.Fatalf("failed to create FSStorage: %v", err)
 	}
@@ -114,7 +115,7 @@ func BenchmarkFSStorage_Save(b *testing.B) {
 // It first populates FSStorage with a single chunk, then repeatedly reads it.
 func BenchmarkFSStorage_Load(b *testing.B) {
 	tmpDir := b.TempDir()
-	fs, err := NewFSStorage(tmpDir, nil)
+	fs, err := storage.NewFSStorage(tmpDir, nil)
 	if err != nil {
 		b.Fatalf("failed to create FSStorage: %v", err)
 	}
@@ -135,7 +136,7 @@ func BenchmarkFSStorage_Load(b *testing.B) {
 // It uses b.RunParallel to spawn multiple goroutines.
 func BenchmarkFSStorage_Parallel(b *testing.B) {
 	tmpDir := b.TempDir()
-	fs, err := NewFSStorage(tmpDir, nil)
+	fs, err := storage.NewFSStorage(tmpDir, nil)
 	if err != nil {
 		b.Fatalf("failed to create FSStorage: %v", err)
 	}

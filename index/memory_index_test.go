@@ -1,9 +1,10 @@
-package index
+package index_test
 
 import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/AumSahayata/cdcgo/index"
 	"github.com/AumSahayata/cdcgo/internal/testutil"
 )
 
@@ -12,7 +13,7 @@ import (
 func TestMemoryIndex_AddAndExists(t *testing.T) {
 	ch := testutil.TestChunk([]byte("test-data"), 9)
 
-	mi := NewMemoryIndex()
+	mi := index.NewMemoryIndex()
 
 	// Add the chunk
 	if err := mi.Add(ch); err != nil {
@@ -29,7 +30,7 @@ func TestMemoryIndex_AddAndExists(t *testing.T) {
 func TestMemoryIndex_Get(t *testing.T) {
 	ch := testutil.TestChunk([]byte("chunks"), 6)
 
-	mi := NewMemoryIndex()
+	mi := index.NewMemoryIndex()
 	if err := mi.Add(ch); err != nil {
 		t.Fatalf("unexpected error adding chunk: %v", err)
 	}
@@ -47,7 +48,7 @@ func TestMemoryIndex_Get(t *testing.T) {
 // TestMemoryIndex_NonExistent ensures Exists() and Get() behave correctly
 // when the chunk is not in the index.
 func TestMemoryIndex_NonExistent(t *testing.T) {
-	mi := NewMemoryIndex()
+	mi := index.NewMemoryIndex()
 
 	if mi.Exists("pokemon") {
 		t.Errorf("expected Exists() to return false for unknown hash")
@@ -61,7 +62,7 @@ func TestMemoryIndex_NonExistent(t *testing.T) {
 // TestMemoryIndex_Concurrent verifies that MemoryIndex
 // is safe for concurrent use.
 func TestMemoryIndex_Concurrent(t *testing.T) {
-	mi := NewMemoryIndex()
+	mi := index.NewMemoryIndex()
 	ch := testutil.TestChunk([]byte("concurrent"), 10)
 
 	done := make(chan bool)
@@ -89,7 +90,7 @@ func TestMemoryIndex_Concurrent(t *testing.T) {
 
 // BenchmarkMemoryIndex_Add measures write throughput (Add only).
 func BenchmarkMemoryIndex_Add(b *testing.B) {
-	idx := NewMemoryIndex()
+	idx := index.NewMemoryIndex()
 	chunkSize := 1024 // 1 KB chunks
 	b.SetBytes(int64(chunkSize))
 
@@ -105,7 +106,7 @@ func BenchmarkMemoryIndex_Add(b *testing.B) {
 
 // BenchmarkMemoryIndex_Exists measures lookup throughput (Exists only).
 func BenchmarkMemoryIndex_Exists(b *testing.B) {
-	idx := NewMemoryIndex()
+	idx := index.NewMemoryIndex()
 	chunkSize := 1024
 	b.SetBytes(int64(chunkSize))
 
@@ -120,7 +121,7 @@ func BenchmarkMemoryIndex_Exists(b *testing.B) {
 
 // BenchmarkMemoryIndex_AddAndExists measures mixed workload (Add + Exists).
 func BenchmarkMemoryIndex_AddAndExists(b *testing.B) {
-	idx := NewMemoryIndex()
+	idx := index.NewMemoryIndex()
 	chunkSize := 1024
 	b.SetBytes(int64(chunkSize))
 
@@ -138,7 +139,7 @@ func BenchmarkMemoryIndex_AddAndExists(b *testing.B) {
 // BenchmarkMemoryIndex_Parallel measures concurrent Add+Exists workload.
 // Uses atomic counter for unique data per goroutine.
 func BenchmarkMemoryIndex_Parallel(b *testing.B) {
-	idx := NewMemoryIndex()
+	idx := index.NewMemoryIndex()
 	chunkSize := 1024
 	b.SetBytes(int64(chunkSize))
 

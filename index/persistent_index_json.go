@@ -7,7 +7,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/AumSahayata/cdcgo/model"
+	"github.com/AumSahayata/cdcgo"
 )
 
 // PersistentIndexJSON is a JSON-backed implementation of PersistentIndex.
@@ -25,7 +25,7 @@ import (
 //   - For high scale, prefer BoltDB/SQLite implementations.
 type PersistentIndexJSON struct {
 	path  string                 // file path on disk
-	store map[string]model.Chunk // in-memory representation
+	store map[string]cdcgo.Chunk // in-memory representation
 	mu    sync.RWMutex           // concurrency control
 }
 
@@ -43,7 +43,7 @@ type PersistentIndexJSON struct {
 func NewPersistentIndexJSON(path string) (*PersistentIndexJSON, error) {
 	idx := &PersistentIndexJSON{
 		path:  path,
-		store: make(map[string]model.Chunk),
+		store: make(map[string]cdcgo.Chunk),
 	}
 
 	// Check if the file exists
@@ -69,11 +69,11 @@ func NewPersistentIndexJSON(path string) (*PersistentIndexJSON, error) {
 //
 // If the chunk already exists, it is silently ignored.
 // Errors during disk flush are returned.
-func (p *PersistentIndexJSON) Add(ch model.Chunk) error {
+func (p *PersistentIndexJSON) Add(ch cdcgo.Chunk) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	newStore := make(map[string]model.Chunk)
+	newStore := make(map[string]cdcgo.Chunk)
 	maps.Copy(newStore, p.store)
 	newStore[hex.EncodeToString(ch.Hash)] = ch
 
@@ -159,7 +159,7 @@ func (p *PersistentIndexJSON) ExistsWithErr(hash string) (bool, error) {
 //   - chunk
 //   - true if found
 //   - false if not found
-func (p *PersistentIndexJSON) Get(hash string) (model.Chunk, bool) {
+func (p *PersistentIndexJSON) Get(hash string) (cdcgo.Chunk, bool) {
 	ch, ok, _ := p.GetWithErr(hash)
 	return ch, ok
 }
@@ -171,7 +171,7 @@ func (p *PersistentIndexJSON) Get(hash string) (model.Chunk, bool) {
 //   - chunk
 //   - boolean
 //   - error
-func (p *PersistentIndexJSON) GetWithErr(hash string) (model.Chunk, bool, error) {
+func (p *PersistentIndexJSON) GetWithErr(hash string) (cdcgo.Chunk, bool, error) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
@@ -184,14 +184,14 @@ func (p *PersistentIndexJSON) GetWithErr(hash string) (model.Chunk, bool, error)
 	if err := p.load(); err != nil {
 		if os.IsNotExist(err) {
 			// File does not exist → treat as empty store
-			return model.Chunk{}, false, nil
+			return cdcgo.Chunk{}, false, nil
 		}
-		return model.Chunk{}, false, err
+		return cdcgo.Chunk{}, false, err
 	}
 
 	ch, ok := p.store[hash]
 	if !ok {
-		return model.Chunk{}, false, nil
+		return cdcgo.Chunk{}, false, nil
 	}
 
 	return ch, true, nil
@@ -206,7 +206,7 @@ func (p *PersistentIndexJSON) load() error {
 		return err
 	}
 
-	tmp := make(map[string]model.Chunk)
+	tmp := make(map[string]cdcgo.Chunk)
 	if err := json.Unmarshal(data, &tmp); err != nil {
 		return err
 	}

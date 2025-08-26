@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/AumSahayata/cdcgo"
 	"github.com/AumSahayata/cdcgo/chunk"
 	"github.com/AumSahayata/cdcgo/index"
-	"github.com/AumSahayata/cdcgo/model"
 )
 
 // FSStorage provides file-backed chunk storage combined with a Index.
@@ -49,7 +49,7 @@ func NewFSStorage(root string, idx chunk.Index) (*FSStorage, error) {
 //   - data: the actual chunk bytes
 //
 // Returns an error if writing to disk fails.
-func (fs *FSStorage) Save(chunk model.Chunk, data []byte) error {
+func (fs *FSStorage) Save(chunk cdcgo.Chunk, data []byte) error {
 	// Lock for concurrent writes
 	fs.mu.Lock()
 	defer fs.mu.Unlock()

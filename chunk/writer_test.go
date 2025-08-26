@@ -1,4 +1,4 @@
-package chunk
+package chunk_test
 
 import (
 	"bytes"
@@ -7,8 +7,9 @@ import (
 	"io"
 	"testing"
 
+	"github.com/AumSahayata/cdcgo"
+	"github.com/AumSahayata/cdcgo/chunk"
 	"github.com/AumSahayata/cdcgo/fastcdc"
-	"github.com/AumSahayata/cdcgo/model"
 )
 
 // TestChunkWriter_Basic tests basic ChunkWriter functionality.
@@ -21,16 +22,16 @@ import (
 func TestChunkWriter_Basic(t *testing.T) {
 	// Prepare a buffer to act as underlying storage
 	buf := &bytes.Buffer{}
-	cw := NewChunkWriter(buf, nil)
+	cw := chunk.NewChunkWriter(buf, nil)
 
 	data1 := []byte("Chunk1")
 	data2 := []byte("Chunk2")
 
 	hash1 := sha256.Sum256(data1)
-	ch1 := model.Chunk{Hash: hash1[:]}
+	ch1 := cdcgo.Chunk{Hash: hash1[:]}
 
 	hash2 := sha256.Sum256(data2)
-	ch2 := model.Chunk{Hash: hash2[:]}
+	ch2 := cdcgo.Chunk{Hash: hash2[:]}
 
 	// Write first chunk
 	n, dup, err := cw.WriteChunk(ch1, data1)
@@ -75,7 +76,7 @@ func BenchmarkChunkWriter(b *testing.B) {
 
 	// FastCDC parameters
 	params := fastcdc.NewParams(4<<10, 8<<10, 16<<10, nil) // min=4KB, avg=8KB, max=16KB
-	chunker := fastcdc.NewChunker(params)
+	chunker := fastcdc.NewChunker(&params)
 
 	// Test multiple buffer sizes for ChunkReader
 	bufferSizes := []int{4 << 10, 64 << 10, 1 << 20} // 4KB, 64KB, 1MB
@@ -84,11 +85,11 @@ func BenchmarkChunkWriter(b *testing.B) {
 		b.Run(fmt.Sprintf("bufSize=%d", bufSize), func(b *testing.B) {
 			b.SetBytes(dataSize) // allows Go to report MB/s
 			for b.Loop() {
-				reader, err := NewChunkReader(bytes.NewReader(data), "", bufSize, chunker)
+				reader, err := chunk.NewChunkReader(bytes.NewReader(data), "", bufSize, chunker)
 				if err != nil {
 					b.Fatalf("failed to create chunk reader: %v", err)
 				}
-				writer := NewChunkWriter(io.Discard, nil)
+				writer := chunk.NewChunkWriter(io.Discard, nil)
 
 				for {
 					ch, _, err := reader.Next()

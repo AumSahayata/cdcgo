@@ -3,16 +3,15 @@ package storage
 import (
 	"sync"
 
+	"github.com/AumSahayata/cdcgo"
 	"github.com/AumSahayata/cdcgo/chunk"
-	"github.com/AumSahayata/cdcgo/model"
 )
 
 // Storage defines the minimal behavior for a chunk storage backend.
 // Backends should guarantee deduplication and safe persistence.
 type Storage interface {
-	Save(chunk model.Chunk, data []byte) error
+	Save(chunk cdcgo.Chunk, data []byte) error
 	Load(hash string) ([]byte, error)
-	VerifyIntegrity() error
 }
 
 // BaseStorage provides shared helpers for storage backends.

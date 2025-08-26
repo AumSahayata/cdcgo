@@ -1,10 +1,11 @@
-package index
+package index_test
 
 import (
 	"os"
 	"sync/atomic"
 	"testing"
 
+	"github.com/AumSahayata/cdcgo/index"
 	"github.com/AumSahayata/cdcgo/internal/testutil"
 )
 
@@ -15,7 +16,7 @@ func TestPersistentIndexJSON_AddAndExists(t *testing.T) {
 	path := t.TempDir() + "/index.json"
 
 	// Open new index
-	idx, err := NewPersistentIndexJSON(path)
+	idx, err := index.NewPersistentIndexJSON(path)
 	if err != nil {
 		t.Fatalf("failed to create index: %v", err)
 	}
@@ -32,7 +33,7 @@ func TestPersistentIndexJSON_AddAndExists(t *testing.T) {
 	}
 
 	// Reopen index from disk
-	idx2, err := NewPersistentIndexJSON(path)
+	idx2, err := index.NewPersistentIndexJSON(path)
 	if err != nil {
 		t.Fatalf("failed to reopen index: %v", err)
 	}
@@ -48,7 +49,7 @@ func TestPersistentIndexJSON_Get(t *testing.T) {
 	path := t.TempDir() + "/index.json"
 
 	// Open new index
-	idx, err := NewPersistentIndexJSON(path)
+	idx, err := index.NewPersistentIndexJSON(path)
 	if err != nil {
 		t.Fatalf("failed to create index: %v", err)
 	}
@@ -75,7 +76,7 @@ func TestPersistentIndexJSON_NonExistent(t *testing.T) {
 	path := t.TempDir() + "/index.json"
 
 	// Open new index
-	idx, err := NewPersistentIndexJSON(path)
+	idx, err := index.NewPersistentIndexJSON(path)
 	if err != nil {
 		t.Fatalf("failed to create index: %v", err)
 	}
@@ -101,7 +102,7 @@ func TestPersistentIndexJSON_Concurrent(t *testing.T) {
 	path := t.TempDir() + "/index.json"
 
 	// Open new index
-	idx, err := NewPersistentIndexJSON(path)
+	idx, err := index.NewPersistentIndexJSON(path)
 	if err != nil {
 		t.Fatalf("failed to create index: %v", err)
 	}
@@ -142,7 +143,7 @@ func TestPersistentIndexJSON_CorruptedFile(t *testing.T) {
 	}
 
 	// Open the index (it should still construct, but loading is deferred)
-	_, err := NewPersistentIndexJSON(path)
+	_, err := index.NewPersistentIndexJSON(path)
 	if err == nil {
 		t.Fatalf("expected error due to corrupted file, got nil")
 	}
@@ -154,7 +155,7 @@ func BenchmarkPersistentIndexJSON_Add(b *testing.B) {
 	path := b.TempDir() + "/index.json"
 
 	// Open new PersistentIndexJSON
-	idx, err := NewPersistentIndexJSON(path)
+	idx, err := index.NewPersistentIndexJSON(path)
 	if err != nil {
 		b.Fatalf("failed to create index: %v", err)
 	}
@@ -173,7 +174,7 @@ func BenchmarkPersistentIndexJSON_Add(b *testing.B) {
 // BenchmarkPersistentIndexJSON_Exists measures lookup throughput (Exists only).
 func BenchmarkPersistentIndexJSON_Exists(b *testing.B) {
 	path := b.TempDir() + "/index.json"
-	idx, err := NewPersistentIndexJSON(path)
+	idx, err := index.NewPersistentIndexJSON(path)
 	if err != nil {
 		b.Fatalf("failed to create index: %v", err)
 	}
@@ -193,7 +194,7 @@ func BenchmarkPersistentIndexJSON_Exists(b *testing.B) {
 // BenchmarkPersistentIndexJSON_AddAndExists measures mixed workload (Add + Exists).
 func BenchmarkPersistentIndexJSON_AddAndExists(b *testing.B) {
 	path := b.TempDir() + "/index.json"
-	idx, err := NewPersistentIndexJSON(path)
+	idx, err := index.NewPersistentIndexJSON(path)
 	if err != nil {
 		b.Fatalf("failed to create index: %v", err)
 	}
@@ -213,7 +214,7 @@ func BenchmarkPersistentIndexJSON_AddAndExists(b *testing.B) {
 // BenchmarkPersistentIndexJSON_Parallel measures concurrent workload.
 func BenchmarkPersistentIndexJSON_Parallel(b *testing.B) {
 	path := b.TempDir() + "/index.json"
-	idx, err := NewPersistentIndexJSON(path)
+	idx, err := index.NewPersistentIndexJSON(path)
 	if err != nil {
 		b.Fatalf("failed to create index: %v", err)
 	}

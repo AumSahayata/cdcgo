@@ -1,6 +1,8 @@
 package chunk
 
-import "github.com/AumSahayata/cdcgo/model"
+import (
+	"github.com/AumSahayata/cdcgo"
+)
 
 // Index defines the minimal interface for deduplication metadata storage.
 // It is intended for in-memory or simple backends that are guaranteed to succeed.
@@ -12,9 +14,9 @@ import "github.com/AumSahayata/cdcgo/model"
 //
 // This interface is safe for local and lightweight usage where failures are not expected.
 type Index interface {
-	Add(chunk model.Chunk) error         // record a new chunk
+	Add(chunk cdcgo.Chunk) error         // record a new chunk
 	Exists(hash string) bool             // check if chunk exists
-	Get(hash string) (model.Chunk, bool) // retrieve chunk info
+	Get(hash string) (cdcgo.Chunk, bool) // retrieve chunk info
 }
 
 // PersistentIndex extends Index to support backends where storage operations
@@ -27,5 +29,5 @@ type Index interface {
 type PersistentIndex interface {
 	Index
 	ExistsWithErr(hash string) (bool, error)           // Check if chunk exists, with error reporting
-	GetWithErr(hash string) (model.Chunk, bool, error) // Retrieve chunk metadata, with error reporting
+	GetWithErr(hash string) (cdcgo.Chunk, bool, error) // Retrieve chunk metadata, with error reporting
 }

@@ -1,4 +1,4 @@
-package model
+package cdcgo
 
 import (
 	"crypto/sha1"
